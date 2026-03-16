@@ -1,0 +1,276 @@
+﻿@page
+@model SKNSchoolsPortal.Pages.account.loginModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKN Schools - Login Portal</title>
+    
+    <link rel="shortcut icon" href="/appicons/favicon.ico">
+    <!-- Bootstrap 5 CSS -->
+    <link href="~/lib/twitter-bootstrap/css/bootstrap.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link href="~/lib/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <style>
+            /*
+               COLOR PALETTE DERIVED FROM IMAGE DESCRIPTION:
+               - Primary: Deep Blue (The main color of the circular logo)
+               - Secondary: Cool Grey (To complement the blue without clashing)
+               - Info: Bright Cyan (Represents the "knowledge" and light reflections)
+               - Warning: Gold (Represents the "stars" and achievement mentioned in the logo)
+            */
+            :root {
+                --bs-primary: #0f4c81;       /* Deep Academic Blue */
+                --bs-primary-rgb: 15, 76, 129;
+                --bs-secondary: #5c677d;     /* Neutral Slate */
+                --bs-info: #0dcaf0;          /* Bright Cyan/Blue */
+                --bs-warning: #d4a017;       /* Academic Gold */
+                --sidebar-bg: #0b3d69;       /* A slightly darker shade for the sidebar background */
+            }
+
+            body {
+                background-color: #f0f2f5;
+                font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            }
+
+            /* Card Container Styling */
+            .login-card {
+                border: none;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+                min-height: 600px; /* Ensure decent height */
+            }
+
+            /* Left Sidebar Styling */
+            .login-sidebar {
+                background-color: var(--sidebar-bg);
+                background-image: radial-gradient(circle at top right, #15558f 0%, var(--sidebar-bg) 100%);
+                color: white;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding: 3rem;
+                text-align: center;
+            }
+
+            /* Logo Image Styling */
+            .school-logo {
+                width: 220px;
+                height: 220px;
+                object-fit: contain;
+                filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+                margin-bottom: 2rem;
+                animation: float 6s ease-in-out infinite;
+            }
+
+            /* Subtle floating animation for the logo */
+            @@keyframes float {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+                100% { transform: translateY(0px); }
+            }
+
+            .motto-text {
+                font-style: italic;
+                font-weight: 300;
+                letter-spacing: 1px;
+                opacity: 0.9;
+                border-top: 1px solid rgba(255,255,255,0.3);
+                border-bottom: 1px solid rgba(255,255,255,0.3);
+                padding: 10px 0;
+                margin-top: 1rem;
+            }
+
+            /* Right Form Styling */
+            .login-form-section {
+                padding: 3rem;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                background-color: white;
+            }
+
+            .form-control:focus {
+                border-color: var(--bs-primary);
+                box-shadow: 0 0 0 0.25rem rgba(15, 76, 129, 0.25);
+            }
+
+            .btn-primary {
+                background-color: var(--bs-primary);
+                border-color: var(--bs-primary);
+                padding: 12px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            }
+
+            .btn-primary:hover {
+                background-color: #0a3d6b;
+                border-color: #0a3d6b;
+            }
+
+            /* Link styling */
+            .text-info-custom {
+                color: var(--bs-info);
+                text-decoration: none;
+            }
+            .text-info-custom:hover {
+                text-decoration: underline;
+                color: #0aa2c0;
+            }
+
+            /* Mobile specific adjustments */
+            @@media (max-width: 767px) {
+                .login-form-section {
+                    padding: 2rem;
+                }
+                .mobile-branding {
+                    display: block; /* Show text branding on mobile since image is hidden */
+                }
+            }
+            @@media (min-width: 768px) {
+                .mobile-branding {
+                    display: none;
+                }
+            }
+    </style>
+</head>
+<body>
+
+    <main class="d-flex align-items-center justify-content-center min-vh-100 py-4">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-xl-10 col-lg-11">
+                    <div class="card login-card rounded-4">
+                        <div class="row g-0">
+                            
+                            <!-- LEFT SIDE: Logo and Info (Hidden on Mobile via d-none d-md-flex) -->
+                            <div class="col-md-5 d-none d-md-flex flex-column login-sidebar position-relative">
+                                <!-- Decorative Background Element -->
+                                <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10">
+                                    <i class="bi bi-grid-3x3-gap-fill" style="font-size: 10rem; position: absolute; top: -20px; left: -20px;"></i>
+                                    <i class="bi bi-book-half" style="font-size: 8rem; position: absolute; bottom: -20px; right: -20px; transform: rotate(-15deg);"></i>
+                                </div>
+
+                                <!-- Content -->
+                                <div class="z-1">
+                                    <img src="~/appicons/logo.png"
+                                         alt="SKN Schools Logo"
+                                         class="school-logo rounded-circle border border-4 border-light">
+                                    
+                                    <h2 class="fw-bold mb-2">SKN SCHOOLS</h2>
+                                    <p class="text-white-50 mb-4">Apir, Makurdi</p>
+                                    
+                                    <div class="motto-text">
+                                        <i class="bi bi-lightbulb-fill text-warning me-2"></i>
+                                        KNOWLEDGE & SELF-RELIANCE
+                                    </div>
+
+                                    <div class="mt-5 pt-4">
+                                        <p class="small text-white-50">Empowering minds for the future.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT SIDE: Login Form -->
+                            <div class="col-md-7 bg-white">
+                                <div class="login-form-section h-100">
+                                    
+                                    <!-- Mobile Branding (Visible only when left side is hidden) -->
+                                    <div class="mobile-branding text-center mb-4">
+                                        <h3 class="fw-bold" style="color: var(--bs-primary);">SKN SCHOOLS</h3>
+                                        <p class="text-muted small">Student & Staff Portal</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <h2 class="fw-bold text-dark">SKN SCHOOLS</h2>
+                                        <p class="text-secondary">Student Result Portal.</p>
+                                    </div>
+
+                                    <form method="post">
+                                        
+                                        <!-- Email Input -->
+                                        <div class="form-floating mb-3">
+                                            <input type="text" class="form-control" asp-for="Input.Username" placeholder="name@example.com" required>
+                                            <label for="floatingInput">
+                                                <i class="bi bi-envelope me-2 text-secondary"></i>Student Registration Number
+                                            </label>
+                                        </div>
+
+                                        <!-- Password Input -->
+                                        <div class="input-group mb-3">
+                                            <div class="form-floating flex-grow-1">
+                                                <input type="password" class="form-control rounded-start-4" asp-for="Input.Password" placeholder="Password" required>
+                                                <label for="floatingPassword">
+                                                    <i class="bi bi-lock me-2 text-secondary"></i>Password
+                                                </label>
+                                            </div>
+                                            <span class="input-group-text bg-white rounded-end-4 cursor-pointer" id="togglePassword" style="cursor: pointer; border-left: none;">
+                                                <i class="bi bi-eye-slash" id="toggleIcon"></i>
+                                            </span>
+                                        </div>
+
+                                        <!-- Remember Me & Forgot Password -->
+                                        <div class="d-flex justify-content-between align-items-center mb-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" asp-for="Input.RememberMe">
+                                                <label class="form-check-label text-secondary small" asp-for="Input.RememberMe">
+                                                    Remember me
+                                                </label>
+                                            </div>
+                                            <a href="#" onclick="alert('Please contact your school System administrator')" class="text-info-custom small fw-semibold">Forgot Password?</a>
+                                        </div>
+
+                                        <!-- Submit Button -->
+                                        <button type="submit" class="btn btn-primary w-100 rounded-4 mb-3 shadow-sm">
+                                            Sign In
+                                        </button>
+
+                                    </form>
+                                    <div asp-validation-summary="All" class="text-danger mt-2"></div>
+                                    <p class="text-center mt-4 text-secondary small">
+                                        Don't have an account? <a href="#" class="fw-bold text-info-custom">Contact Administration</a>
+                                    </p>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="text-center mt-4 text-muted small">
+                        &copy; 2023 SKN Schools, Apir, Makurdi. All rights reserved.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="~/lib/twitter-bootstrap/js/bootstrap.bundle.js"></script>
+
+    <!-- Simple Script for Interactions -->
+    <script>
+        // Toggle Password Visibility
+        const togglePassword = document.querySelector('#togglePassword');
+        const passwordInput = document.querySelector('#Input_Password');
+        const toggleIcon = document.querySelector('#toggleIcon');
+
+        togglePassword.addEventListener('click', function () {
+            // Toggle the type attribute
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+
+            // Toggle the eye icon
+            toggleIcon.classList.toggle('bi-eye');
+            toggleIcon.classList.toggle('bi-eye-slash');
+        });
+        
+    </script>
+</body>
+</html>

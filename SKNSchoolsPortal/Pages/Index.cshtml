@@ -1,0 +1,334 @@
+﻿@page
+@inject ApplicationDbContext _db
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+
+    var studentTermReg = _db.TermRegistrations.Where(t => t.StudentId == Model.StudentId).Count();
+    var student = _db.Payments.Include(k => k.Termregistrations.SessionYear).Include(k => k.Termregistrations.Schoolclasses).Include(k => k.Termregistrations.SubClasses).Include(k => k.TermlyFees).Include(k => k.Termregistrations.StudentsData).Where(k => k.Termregistrations.StudentId == Model.StudentId).ToList().Sum(k=>k.Paid);
+
+    //Get the latest term fees amount for the student
+    var termreg = _db.TermRegistrations.Include(k => k.Schoolclasses).Include(k => k.SubClasses).Where(Json => Json.StudentId == Model.StudentId).OrderByDescending(k => k.CreatedDate).FirstOrDefault();
+    double termfees = 0;
+    if(termreg!= null)
+    {
+        var termlyfees = _db.TermLyFeesPays.Where(k => k.Term == termreg.Term && k.SessionYearId == termreg.SessionYearId && k.ClassesInSchoolId == termreg.Schoolclasses.Id).FirstOrDefault();
+        if(termlyfees != null)
+        {
+            termfees = termlyfees.Amount;
+        }
+    }
+}
+
+<!-- Welcome Banner -->
+<div class="welcome-banner">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+            <h4><i class="bi bi-hand-thumbs-up-fill me-2"></i>Welcome back, @Model.Name!</h4>
+            <p>Here is a quick overview of your academic performance and activities.</p>
+            <div class="welcome-date">
+                <i class="bi bi-calendar3 me-1"></i>
+                <span id="currentDate"></span>
+                @if (Model._Session?.Any() == true)
+                {
+                    <span>&mdash; Session @Model._Session.First().Text</span>
+                }
+            </div>
+        </div>
+        <img src="~/appicons/logo.jpeg" alt="SKN Logo"
+             class="rounded-circle border border-3 border-light d-none d-md-block"
+             style="width:70px;height:70px;object-fit:cover;opacity:.85;" />
+    </div>
+</div>
+
+<!-- Stat Cards Row -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="background:linear-gradient(135deg,#0f4c81,#1a6baa)">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <i class="bi bi-mortarboard-fill stat-icon"></i>
+                <span class="badge bg-light text-primary" style="font-size:.68rem">@ViewData["class"]</span>
+            </div>
+            <div class="stat-value">Loading..%</div>
+            <div class="stat-label">Overall Average</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="background:linear-gradient(135deg,#198754,#20a06a)">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <i class="bi bi-graph-up-arrow stat-icon"></i>
+                <span class="badge bg-light text-success" style="font-size:.68rem">0.0%</span>
+            </div>
+            <div class="stat-value">@(studentTermReg)</div>
+            <div class="stat-label">Number Terms Registered</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="background:linear-gradient(135deg,#d4a017,#e8b830)">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <i class="bi bi-cash-coin stat-icon"></i>
+                <span class="badge bg-light text-warning" style="font-size:.68rem">Paid</span>
+            </div>
+            <div class="stat-value">@(SD.ToNaira(student))</div>
+            <div class="stat-label">Total Fees Payments</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="background:linear-gradient(135deg,#5c677d,#7b8599)">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <i class="bi bi-credit-card stat-icon"></i>
+                <span class="badge bg-light text-secondary" style="font-size:.68rem">@ViewData["Term"]</span>
+            </div>
+            <div class="stat-value">@(SD.ToNaira(termfees))</div>
+            <div class="stat-label">Current Term Fees</div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Layout: Charts + Sidebar Cards -->
+<div class="row g-4">
+    <!-- LEFT: Charts -->
+    <div class="col-lg-8">
+        <!-- Term Performance Chart -->
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-bar-chart-fill text-primary me-2"></i>Term Performance</span>
+                <span class="badge bg-primary-soft" style="font-size:.72rem">Total Scores Per Session</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="termChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Annual Performance Chart -->
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-graph-up text-info me-2"></i>Annual Performance Trend</span>
+                <span class="badge bg-info-soft" style="font-size:.72rem">All Terms</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="annualChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Quick Actions & Notifications -->
+    <div class="col-lg-4 order-1">
+        <!-- Quick Actions Card -->
+        <div class="card mb-4">
+            <div class="card-header ">
+                <div class="h4">
+                    Print Terminal Result
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="TermResult">
+                    <div class="row">
+                    <div class="col-12 mb-3">
+                        <label asp-for="terminal.Term" class="form-label"></label>
+                        <select class="form-select" asp-for="terminal.Term"  required>
+                            <option selected disabled value="">Select Term</option>
+                            <option value="@(SD.First)">@(SD.First)</option>
+                            <option value="@(SD.Second)">@(SD.Second)</option>
+                            <option value="@(SD.Third)">@(SD.Third)</option>
+                        </select>
+                        <span asp-validation-for="terminal.Term" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label asp-for="terminal.Session"  class="form-label"></label>
+                        <select class="form-select form-control" asp-for="terminal.Session" asp-items="Model._Session" required>
+                            <option selected disabled value="">Select Session</option>
+                        </select>
+                        <span asp-validation-for="terminal.Session" class="text-danger"></span>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label asp-for="terminal.Classes"  class="form-label"></label>
+                        <select class="form-select form-control w-100" asp-for="terminal.Classes"  asp-items="Model._Class" required>
+                            <option selected disabled>Select class...</option>
+                        </select>
+                        <span asp-validation-for="terminal.Classes" class="text-danger"></span>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-primary  w-100" type="submit" formtarget="_blank"> Print Result</button>
+                    </div>
+                </div>
+                </form>
+            </div>
+        </div>
+
+        @if(TempData["error"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible fade show mt-2 mb-2" role="alert">
+                <strong><i class="bi bi-exclamation-triangle me-2"></i></strong> @TempData["error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="h4">
+                    Print Annual Report Sheet
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="AnnualResult">
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label asp-for="annual.Session" class="form-label"></label>
+                            <select class="form-select custom-select" asp-for="annual.Session" asp-items="Model._Session" required>
+                                <option selected disabled value="">Select session</option>
+                            </select>
+                            <span asp-validation-for="annual.Session" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-primary w-100" type="submit" formtarget="_blank"> Print Result</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Notifications Card -->
+       @*  <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-bell-fill text-danger me-2"></i>Notifications</span>
+                <span class="badge bg-danger" style="font-size:.68rem">3</span>
+            </div>
+            <div class="card-body p-2">
+                <a href="#" class="notification-item">
+                    <span class="notification-dot bg-danger"></span>
+                    <div>
+                        <div class="fw-medium" style="font-size:.88rem">School Announcement</div>
+                        <div class="text-muted" style="font-size:.78rem">Mid-term break starts 14th March. All students are to prepare accordingly.</div>
+                        <div class="text-muted" style="font-size:.7rem;margin-top:4px"><i class="bi bi-clock me-1"></i>2 hours ago</div>
+                    </div>
+                </a>
+                <hr class="my-1" />
+                <a href="#" class="notification-item">
+                    <span class="notification-dot bg-warning"></span>
+                    <div>
+                        <div class="fw-medium" style="font-size:.88rem">Pending Payment</div>
+                        <div class="text-muted" style="font-size:.78rem">PTA levy for 2nd Term is due. Please complete payment before March 20th.</div>
+                        <div class="text-muted" style="font-size:.7rem;margin-top:4px"><i class="bi bi-clock me-1"></i>1 day ago</div>
+                    </div>
+                </a>
+                <hr class="my-1" />
+                <a href="#" class="notification-item">
+                    <span class="notification-dot bg-info"></span>
+                    <div>
+                        <div class="fw-medium" style="font-size:.88rem">Important Notice</div>
+                        <div class="text-muted" style="font-size:.78rem">Report cards for First Term are now available for download.</div>
+                        <div class="text-muted" style="font-size:.7rem;margin-top:4px"><i class="bi bi-clock me-1"></i>3 days ago</div>
+                    </div>
+                </a>
+            </div>
+        </div> *@
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+        // Current date
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        // Model data injected from server
+        const sessionLabels   = @Html.Raw(Model.SessionLabelsJson);
+        const firstTermScores = @Html.Raw(Model.FirstTermScoresJson);
+        const secondTermScores = @Html.Raw(Model.SecondTermScoresJson);
+        const thirdTermScores = @Html.Raw(Model.ThirdTermScoresJson);
+        const annualScores    = @Html.Raw(Model.AnnualScoresJson);
+
+        // Shared chart colors
+        const primary   = '#0f4c81';
+        const info      = '#0dcaf0';
+        const warning   = '#d4a017';
+        const gridColor = 'rgba(0,0,0,.06)';
+        const fontOpts  = { family: 'Poppins', size: 11 };
+
+        // ---------- Term Performance (Bar Chart) ----------
+        // X-axis = sessions, grouped bars = 1st / 2nd / 3rd term total scores
+        new Chart(document.getElementById('termChart'), {
+            type: 'bar',
+            data: {
+                labels: sessionLabels,
+                datasets: [
+                    {
+                        label: '1st Term',
+                        data: firstTermScores,
+                        backgroundColor: primary,
+                        borderRadius: 6,
+                        barPercentage: 0.6,
+                    },
+                    {
+                        label: '2nd Term',
+                        data: secondTermScores,
+                        backgroundColor: info,
+                        borderRadius: 6,
+                        barPercentage: 0.6,
+                    },
+                    {
+                        label: '3rd Term',
+                        data: thirdTermScores,
+                        backgroundColor: warning,
+                        borderRadius: 6,
+                        barPercentage: 0.6,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, padding: 16, font: { family: 'Poppins', size: 12 } } }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: gridColor }, ticks: { font: fontOpts } },
+                    x: { grid: { display: false }, ticks: { font: fontOpts } }
+                }
+            }
+        });
+
+        // ---------- Annual Performance (Line Chart) ----------
+        // X-axis = sessions, single line = cumulative annual total
+        new Chart(document.getElementById('annualChart'), {
+            type: 'line',
+            data: {
+                labels: sessionLabels,
+                datasets: [
+                    {
+                        label: 'Annual Total',
+                        data: annualScores,
+                        borderColor: primary,
+                        backgroundColor: 'rgba(15,76,129,.12)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 6,
+                        pointBackgroundColor: primary,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        borderWidth: 3,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, padding: 16, font: { family: 'Poppins', size: 12 } } }
+                },
+                scales: {
+                    y: { beginAtZero: false, grid: { color: gridColor }, ticks: { font: fontOpts } },
+                    x: { grid: { display: false }, ticks: { font: fontOpts } }
+                }
+            }
+        });
+    </script>
+}

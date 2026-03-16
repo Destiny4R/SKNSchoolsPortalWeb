@@ -1,0 +1,149 @@
+@page
+@inject IConfiguration _config
+@inject ApplicationDbContext _db
+@model SKNSchoolsPortal.Pages.Student.ProfileModel
+@{
+    ViewData["Title"] = "My Profile";
+    ViewData["ActivePage"] = "profile";
+    var maleAvatarPath = "/images/avatar.png";
+    var femaleAvatarPath = "/images/avata.png";
+    var fallbackAvatarPath = Model.student?.Gender == "Male" ? maleAvatarPath : femaleAvatarPath;
+    var path = "";
+    if (string.IsNullOrEmpty(Model.student?.Passport))
+    {
+        path = fallbackAvatarPath;
+    }
+    else
+    {
+        path = _config["BaseUrl:url"] + Model.student.Passport;
+    }
+    var termreg = _db.TermRegistrations.Include(k => k.Schoolclasses).Include(k => k.SubClasses).Where(Json => Json.StudentId == Model.student.Id).OrderByDescending(k => k.CreatedDate).FirstOrDefault();
+}
+
+<!-- Profile Header -->
+<div class="profile-header">
+    <div class="d-flex align-items-center gap-4 flex-wrap position-relative z-1">
+        <img src="@path"
+             alt="Student avatar"
+             class="profile-avatar"
+             onerror="this.onerror=null;this.src='@fallbackAvatarPath';" />
+        <div>
+            <h4 class="fw-bold mb-1">@($"{Model.student.SurName} {Model.student.OtherName} {Model.student.FirstName}")</h4>
+            <p class="mb-1 opacity-75" style="font-size:.9rem">
+                <i class="bi bi-hash me-1"></i>Admission No: @(Model.student.StudentRegNo)
+            </p>
+            <div class="d-flex gap-3 flex-wrap" style="font-size:.82rem">
+                <span class="badge bg-light text-primary px-3 py-2 rounded-pill">
+                    <i class="bi bi-book me-1"></i>@($"{termreg?.Schoolclasses?.Name} {termreg?.SubClasses?.Name}".Trim())
+                </span>
+                <span class="badge bg-light text-success px-3 py-2 rounded-pill">
+                    <i class="bi bi-calendar me-1"></i>@(Model.student.SessionYear.Name) Session
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Student Information -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-person-vcard-fill text-primary me-2"></i>Student Information
+            </div>
+            <div class="card-body">
+                <div class="profile-info-row">
+                    <span class="profile-info-label"><i class="bi bi-hash me-2 text-secondary"></i>Admission Number</span>
+                    <span class="profile-info-value">@(Model.student.StudentRegNo)</span>
+                </div>
+                <div class="profile-info-row">
+                    <span class="profile-info-label"><i class="bi bi-person me-2 text-secondary"></i>Full Name</span>
+                    <span class="profile-info-value">@($"{Model.student.SurName} {Model.student.OtherName} {Model.student.FirstName}")</span>
+                </div>
+                <div class="profile-info-row">
+                    <span class="profile-info-label"><i class="bi bi-book me-2 text-secondary"></i>Class</span>
+                    <span class="profile-info-value">@($"{termreg?.Schoolclasses?.Name} {termreg?.SubClasses?.Name}".Trim())</span>
+                </div>
+                <div class="profile-info-row">
+                    <span class="profile-info-label"><i class="bi bi-gender-ambiguous me-2 text-secondary"></i>Gender</span>
+                    <span class="profile-info-value">@(Model.student.Gender)</span>
+                </div>
+                <div class="profile-info-row">
+                    <span class="profile-info-label"><i class="bi bi-calendar-date me-2 text-secondary"></i>Date of Birth</span>
+                    <span class="profile-info-value">@(Model.student.DateOfBirth.ToLongDateString())</span>
+                </div>
+                <div class="profile-info-row">
+                    <span class="profile-info-label"><i class="bi bi-calendar3 me-2 text-secondary"></i>Session</span>
+                    <span class="profile-info-value">@(Model.student.SessionYear.Name)</span>
+                </div>
+                <div class="profile-info-row">
+                    <span class="profile-info-label"><i class="bi bi-telephone me-2 text-secondary"></i>State</span>
+                    <span class="profile-info-value">@(Model.student.State)</span>
+                </div>
+                <div class="profile-info-row">
+                    <span class="profile-info-label"><i class="bi bi-telephone me-2 text-secondary"></i>Local Government</span>
+                    <span class="profile-info-value">@(Model.student.LocalGov)</span>
+                </div>
+                <div class="profile-info-row">
+                    <span class="profile-info-label"><i class="bi bi-geo-alt me-2 text-secondary"></i>Address</span>
+                    <span class="profile-info-value">@(Model.student.Address)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parent / Guardian Information -->
+    @if (Model.parent?.ParentTable != null)
+    {
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-people-fill text-info me-2"></i>Parent / Guardian Information
+                </div>
+                <div class="card-body">
+                    <div class="profile-info-row">
+                        <span class="profile-info-label"><i class="bi bi-person me-2 text-secondary"></i>Guardian Name</span>
+                        <span class="profile-info-value">@(Model.parent.ParentTable.Name)</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label"><i class="bi bi-telephone me-2 text-secondary"></i>Phone Number</span>
+                        <span class="profile-info-value">@(Model.parent.ParentTable.PhoneNumber)</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label"><i class="bi bi-envelope me-2 text-secondary"></i>Occupation</span>
+                        <span class="profile-info-value">@(Model.parent.ParentTable.Occupation)</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label"><i class="bi bi-heart me-2 text-secondary"></i>Relationship</span>
+                        <span class="profile-info-value">@(Model.parent.ParentTable.Relationship)</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label"><i class="bi bi-geo-alt me-2 text-secondary"></i>Address</span>
+                        <span class="profile-info-value">@(Model.parent.ParentTable.Address)</span>
+                    </div>
+                </div>
+            </div>
+
+        <!-- Emergency Contact -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Emergency Contact
+                </div>
+                <div class="card-body">
+                    <div class="profile-info-row">
+                        <span class="profile-info-label"><i class="bi bi-person me-2 text-secondary"></i>Name</span>
+                        <span class="profile-info-value">@(Model.parent.ParentTable.Name)</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label"><i class="bi bi-telephone me-2 text-secondary"></i>Phone</span>
+                        <span class="profile-info-value">@(Model.parent.ParentTable.PhoneNumber)</span>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="profile-info-label"><i class="bi bi-heart me-2 text-secondary"></i>Relationship</span>
+                        <span class="profile-info-value">@(Model.parent.ParentTable.Relationship)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

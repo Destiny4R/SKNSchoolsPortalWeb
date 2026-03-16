@@ -1,0 +1,23 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgFemale" x1="72" y1="48" x2="440" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5C677D"/>
+      <stop offset="1" stop-color="#0DCAF0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="256" fill="url(#bgFemale)"/>
+
+  <circle cx="256" cy="212" r="108" fill="#FFF5FB"/>
+
+  <path d="M256 322C179.742 322 118 383.742 118 460C118 477.673 132.327 492 150 492H362C379.673 492 394 477.673 394 460C394 383.742 332.258 322 256 322Z" fill="#FFF5FB"/>
+
+  <path d="M158 216C158 149.726 203.726 96 260 96C316.274 96 354 143.726 354 210V240H158V216Z" fill="#5C677D"/>
+
+  <circle cx="214" cy="208" r="10" fill="#5C677D"/>
+  <circle cx="298" cy="208" r="10" fill="#5C677D"/>
+
+  <path d="M212 246C224 258 238 264 256 264C274 264 288 258 300 246" stroke="#5C677D" stroke-width="10" stroke-linecap="round"/>
+
+  <path d="M202 334C202 310.804 220.804 292 244 292H268C291.196 292 310 310.804 310 334V342H202V334Z" fill="#F5D4E6"/>
+</svg>

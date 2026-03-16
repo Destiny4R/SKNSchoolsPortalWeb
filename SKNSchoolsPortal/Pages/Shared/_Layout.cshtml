@@ -1,0 +1,268 @@
+﻿@inject IConfiguration _config
+@inject ApplicationDbContext _db
+@inject UserManager<ApplicationUser> _userManager
+@{
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+
+    ViewData["Term"] = "";
+    ViewData["class"] = "";
+
+    var user = await _userManager.GetUserAsync(User);
+    string path = "", name = "", classes = "";
+    var fallbackAvatarPath = "";
+    if (user == null)
+    {
+        path = "/images/avatar-male.svg";
+    }
+    else
+    {
+        var student = _db.StudentTable.FirstOrDefault(k => k.ApplicationUserId == user.Id);
+        if (student != null)
+        {
+            var termreg = _db.TermRegistrations.Include(k => k.Schoolclasses).Include(k => k.SubClasses).Where(Json => Json.StudentId == student.Id).OrderByDescending(k => k.CreatedDate).FirstOrDefault();
+            if (termreg != null)
+            {
+                classes = $"{termreg.Schoolclasses.Name} - {termreg.SubClasses.Name}";
+                ViewData["Term"] = termreg.Term;
+                ViewData["class"] = classes;
+            }
+
+            name = $"{student.SurName} {student.FirstName}";
+
+
+            var maleAvatarPath = "/images/avatar.png";
+            var femaleAvatarPath = "/images/avata.png";
+            fallbackAvatarPath = student?.Gender == "Male" ? maleAvatarPath : femaleAvatarPath;
+
+            if (string.IsNullOrEmpty(student?.Passport))
+            {
+                path = fallbackAvatarPath;
+            }
+            else
+            {
+                path = _config["BaseUrl:url"] + student.Passport;
+            }
+        }
+
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SKN Schools Portal</title>
+
+    <link rel="shortcut icon" href="/appicons/favicon.ico">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+
+    @await RenderSectionAsync("Styles", required: false)
+    <!-- Bootstrap 5 -->
+    <link href="~/lib/twitter-bootstrap/css/bootstrap.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link href="~/lib/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+    <!-- Dashboard Theme -->
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+</head>
+<body>
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside id="sidebar" class="sidebar">
+        <!-- Brand -->
+        <div class="sidebar-brand">
+            <img src="~/appicons/logo.jpeg" alt="SKN Schools Logo" />
+            <div>
+                <div class="sidebar-brand-text">SKN SCHOOLS</div>
+                <div class="sidebar-brand-sub">Student Portal</div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <ul class="sidebar-nav">
+            <li class="nav-label">Main</li>
+            <li class="nav-item">
+                <a asp-page="/Index" class="@(currentPage == "/Index" ? "active" : "")">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-page="/Student/Profile" class="@(currentPage == "/Student/Profile" ? "active" : "")">
+                    <i class="bi bi-person-fill"></i>
+                    <span>My Profile</span>
+                </a>
+            </li>
+
+            <li class="nav-label">Payments</li>
+            <li class="nav-item">
+                <a asp-page="/Student/SchoolFees" class="@(currentPage == "/Student/SchoolFees" ? "active" : "")">
+                    <i class="bi bi-cash-stack"></i>
+                    <span>School Fees</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-page="/Student/PTAPayments" class="@(currentPage == "/Student/PTAPayments" ? "active" : "")">
+                    <i class="bi bi-people-fill"></i>
+                    <span>PTA Payments</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a asp-page="/Student/OtherPayments" class="@(currentPage == "/Student/OtherPayments" ? "active" : "")">
+                    <i class="bi bi-receipt-cutoff"></i>
+                    <span>Other Payments</span>
+                </a>
+            </li>
+
+            <li class="nav-label">Academics</li>
+            <li class="nav-item">
+                <a href="#">
+                    <i class="bi bi-journal-check"></i>
+                    <span>View Results</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#">
+                    <i class="bi bi-calendar-event"></i>
+                    <span>Timetable</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Sidebar Footer -->
+        <div class="sidebar-footer">
+            <form method="post">
+                <button type="submit" asp-controller="api" asp-action="Logout" >
+                    <i class="bi bi-box-arrow-right me-2"></i> Sign out
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- ========== TOPBAR ========== -->
+    <nav id="topbar" class="topbar">
+        <div class="topbar-left">
+            <button class="topbar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <h1 class="topbar-title d-none d-sm-block">@ViewData["Title"]</h1>
+        </div>
+        <div class="topbar-right">
+            <!-- Notifications -->
+            <button class="topbar-icon-btn" title="Notifications">
+                <i class="bi bi-bell"></i>
+                <span class="topbar-badge"></span>
+            </button>
+            <!-- Messages -->
+            <button class="topbar-icon-btn" title="Messages">
+                <i class="bi bi-chat-dots"></i>
+            </button>
+
+            <!-- User Dropdown -->
+            <div class="dropdown">
+                <button class="user-dropdown-toggle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="user-avatar"><img src="@path" alt="Alternate Text" width="45px" onerror="this.onerror=null;this.src='@fallbackAvatarPath';" class="rounded-circle" /></div>
+                    <div class="d-none d-md-block text-start">
+                        <div class="user-name">@name</div>
+                        <div class="user-role">@(classes) &middot; Student</div>
+                    </div>
+                    <i class="bi bi-chevron-down ms-1 d-none d-md-inline" style="font-size:.7rem;color:var(--bs-secondary)"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end mt-2">
+                    <li>
+                        <a class="dropdown-item" asp-page="/Student/Profile">
+                            <i class="bi bi-person"></i> My Profile
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            <i class="bi bi-gear"></i> Settings
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" target="_blank" href="http://school.skn-cyril.ltd/contact-us">
+                            <i class="bi bi-question-circle"></i> Help &amp; Support
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                        <form method="post">
+                            <button type="submit" asp-controller="api" asp-action="Logout" class="dropdown-item text-danger">
+                                <i class="bi bi-box-arrow-right me-2"></i> Sign out
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <div id="mainContent" class="main-content">
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- ========== FOOTER ========== -->
+    <footer id="dashboardFooter" class="dashboard-footer">
+        <span>&copy; @DateTime.Now.Year SKN Schools, Apir, Makurdi. All rights reserved.</span>
+        <span class="d-none d-sm-inline">
+            <div class="h6"><strong style="font:italic;">Designed and Managed By: D-Best Return Tech - </strong><a class="text-decoration-none" href="tel:08039410863">08039410863</a></div>
+        </span>
+    </footer>
+
+    <!-- ========== SCRIPTS ========== -->
+    <script src="~/lib/twitter-bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script>
+        // ---------- Sidebar Toggle ----------
+        const sidebar       = document.getElementById('sidebar');
+        const overlay        = document.getElementById('sidebarOverlay');
+        const topbar         = document.getElementById('topbar');
+        const mainContent    = document.getElementById('mainContent');
+        const dashboardFooter= document.getElementById('dashboardFooter');
+
+        function isDesktop() { return window.innerWidth >= 992; }
+
+        function toggleSidebar() {
+            if (isDesktop()) {
+                // Desktop: toggle collapsed class to hide/show sidebar
+                sidebar.classList.toggle('collapsed');
+                topbar.classList.toggle('full-width');
+                mainContent.classList.toggle('full-width');
+                dashboardFooter.classList.toggle('full-width');
+            } else {
+                // Tablet & Mobile: slide sidebar in/out with overlay
+                sidebar.classList.toggle('show');
+                overlay.classList.toggle('show');
+            }
+        }
+
+        // Reset sidebar state when crossing the breakpoint
+        window.addEventListener('resize', function () {
+            if (isDesktop()) {
+                // Entered desktop: close mobile overlay, restore desktop sidebar
+                sidebar.classList.remove('show');
+                overlay.classList.remove('show');
+            } else {
+                // Entered tablet/mobile: remove desktop-specific classes
+                sidebar.classList.remove('collapsed');
+                topbar.classList.remove('full-width');
+                mainContent.classList.remove('full-width');
+                dashboardFooter.classList.remove('full-width');
+            }
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
